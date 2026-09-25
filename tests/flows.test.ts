@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AGING_ALARM_NAME,
   AGING_ALARM_PERIOD_MINUTES,
+  OLD_MOVED_AT_STORAGE_KEY,
   SHADOW_DEBOUNCE_MS,
   SHADOW_MAX_WAIT_MS,
   VERIFY_GRACE_MS,
@@ -17,6 +18,7 @@ const SID = "session-now";
 
 let fake: FakeChrome;
 let handlers: BackgroundHandlers;
+let allowAgingRemoveTree = false;
 
 function tab(windowId: number, index: number, url: string, extra: Partial<FakeTab> = {}): FakeTab {
   return { windowId, index, url, title: `title-${windowId}-${index}`, pinned: false, ...extra };
@@ -51,6 +53,7 @@ async function triggerRebuild(): Promise<void> {
 }
 
 beforeEach(() => {
+  allowAgingRemoveTree = false;
   vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
   vi.setSystemTime(NOW);
   fake = installFakeChrome();
@@ -58,10 +61,10 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  expect(fake.chrome.bookmarks.remove).not.toHaveBeenCalled();
-  expect(fake.chrome.bookmarks.removeTree).not.toHaveBeenCalled();
   vi.useRealTimers();
   vi.unstubAllGlobals();
+  expect(fake.chrome.bookmarks.remove).not.toHaveBeenCalled();
+  if (!allowAgingRemoveTree) expect(fake.chrome.bookmarks.removeTree).not.toHaveBeenCalled();
 });
 
 describe("windows.onRemoved", () => {
@@ -255,47 +258,180 @@ describe("回収 (前回の Chrome の控え)", () => {
   });
 });
 
-describe("aging (30 日ルール)", () => {
-  let ids: Record<string, string>;
+describe("aging (7 日で移動し、old で 7 日後に削除)", () => {
+  let ids: { manual: string; auto: string; old: string; oldAuto: string };
 
   beforeEach(() => {
+    allowAgingRemoveTree = true;
     fake.session.seed({ sessionId: SID });
     const root = fake.helpers.seedNode("2", "TabBundle");
     const manual = fake.helpers.seedNode(root, "手動保存");
     const auto = fake.helpers.seedNode(root, "自動バックアップ");
-    fake.helpers.seedNode(root, "old");
-    ids = {
-      manual,
-      auto,
-      manualOld: fake.helpers.seedNode(manual, "手動の古い物", { dateAdded: NOW - 100 * DAY }),
-      recent: fake.helpers.seedNode(auto, "新しい", { dateAdded: NOW - 29 * DAY }),
-      old45: fake.helpers.seedNode(auto, "45 日前", { dateAdded: NOW - 45 * DAY }),
-      bookmark: fake.helpers.seedNode(auto, "直下のブックマーク", { url: "https://x.example/", dateAdded: NOW - 100 * DAY }),
-      old31: fake.helpers.seedNode(auto, "31 日前", { dateAdded: NOW - 31 * DAY }),
-    };
+    const old = fake.helpers.seedNode(root, "old");
+    const oldAuto = fake.helpers.seedNode(old, "自動バックアップ");
+    ids = { manual, auto, old, oldAuto };
   });
 
-  function expectAged(): void {
-    const oldAuto = fake.helpers.path("TabBundle", "old", "自動バックアップ")!;
-    expect(fake.helpers.children(oldAuto).map((c) => c.id)).toEqual([ids.old31, ids.old45]);
-    expect(fake.helpers.children(ids.auto!).map((c) => c.id)).toEqual([ids.recent, ids.bookmark]);
-    expect(fake.helpers.children(ids.manual!).map((c) => c.id)).toEqual([ids.manualOld]);
+  function readOldMovedAt(): Record<string, number> {
+    return (fake.local.peek(OLD_MOVED_AT_STORAGE_KEY) as Record<string, number> | undefined) ?? {};
   }
 
-  it("alarm: 30 日より古い 自動バックアップ/ 直下のフォルダだけを old/自動バックアップ/ に移す", async () => {
+  it("alarm: 8 日前の自動バックアップだけ移し、6 日と 7 日ちょうどは残して移動時刻を記録する", async () => {
+    const six = fake.helpers.seedNode(ids.auto, "6 日前", { dateAdded: NOW - 6 * DAY });
+    const seven = fake.helpers.seedNode(ids.auto, "7 日前", { dateAdded: NOW - 7 * DAY });
+    const eight = fake.helpers.seedNode(ids.auto, "8 日前", { dateAdded: NOW - 8 * DAY });
+    const bookmark = fake.helpers.seedNode(ids.auto, "直下のブックマーク", {
+      url: "https://x.example/",
+      dateAdded: NOW - 100 * DAY,
+    });
+    const manualOld = fake.helpers.seedNode(ids.manual, "手動の古い物", { dateAdded: NOW - 100 * DAY });
+
     await handlers.onAlarm({ name: AGING_ALARM_NAME });
-    expectAged();
+
+    expect(fake.helpers.children(ids.oldAuto).map((child) => child.id)).toEqual([eight]);
+    expect(fake.helpers.children(ids.auto).map((child) => child.id)).toEqual([six, seven, bookmark]);
+    expect(fake.helpers.children(ids.manual).map((child) => child.id)).toEqual([manualOld]);
+    expect(readOldMovedAt()).toEqual({ [eight]: NOW });
+    expect(fake.chrome.bookmarks.removeTree).not.toHaveBeenCalled();
   });
 
-  it("onStartup でも 1 回走る", async () => {
+  it("onStartup: old に 8 日あるフォルダを消し、6 日と 7 日ちょうどは残す", async () => {
+    const six = fake.helpers.seedNode(ids.oldAuto, "6 日前に移動", { dateAdded: NOW - 50 * DAY });
+    const seven = fake.helpers.seedNode(ids.oldAuto, "7 日前に移動", { dateAdded: NOW - 50 * DAY });
+    const eight = fake.helpers.seedNode(ids.oldAuto, "8 日前に移動", { dateAdded: NOW - 50 * DAY });
+    const expiredNested = fake.helpers.seedNode(eight, "子フォルダ");
+    const expiredTab = fake.helpers.seedNode(expiredNested, "タブ", { url: "https://expired.example/" });
+    fake.local.seed({
+      [OLD_MOVED_AT_STORAGE_KEY]: {
+        [six]: NOW - 6 * DAY,
+        [seven]: NOW - 7 * DAY,
+        [eight]: NOW - 8 * DAY,
+      },
+    });
+
     await handlers.onStartup();
-    expectAged();
+
+    expect(fake.helpers.children(ids.oldAuto).map((child) => child.id)).toEqual([six, seven]);
+    expect(readOldMovedAt()).toEqual({ [six]: NOW - 6 * DAY, [seven]: NOW - 7 * DAY });
+    expect(fake.chrome.bookmarks.removeTree.mock.calls.map(([id]) => id)).toEqual([eight]);
+    await expect(fake.chrome.bookmarks.get(eight)).rejects.toThrow();
+    await expect(fake.chrome.bookmarks.get(expiredNested)).rejects.toThrow();
+    await expect(fake.chrome.bookmarks.get(expiredTab)).rejects.toThrow();
+  });
+
+  it("記録のない old のフォルダは初回に時刻を付け、7 日 + 1ms 後の実行で消す", async () => {
+    const oldFolder = fake.helpers.seedNode(ids.oldAuto, "以前からあるフォルダ", { dateAdded: NOW - 100 * DAY });
+
+    await handlers.onAlarm({ name: AGING_ALARM_NAME });
+    expect(fake.helpers.children(ids.oldAuto).map((child) => child.id)).toEqual([oldFolder]);
+    expect(readOldMovedAt()).toEqual({ [oldFolder]: NOW });
+
+    vi.setSystemTime(NOW + 7 * DAY + 1);
+    await handlers.onAlarm({ name: AGING_ALARM_NAME });
+
+    expect(fake.helpers.children(ids.oldAuto)).toEqual([]);
+    expect(readOldMovedAt()).toEqual({});
+    expect(fake.chrome.bookmarks.removeTree.mock.calls.map(([id]) => id)).toEqual([oldFolder]);
+  });
+
+  it("手動保存、old 直下、old 内の深い階層、url 付き項目は動かさず消さない", async () => {
+    const manualFolder = fake.helpers.seedNode(ids.manual, "手動の古いフォルダ", { dateAdded: NOW - 100 * DAY });
+    const manualTab = fake.helpers.seedNode(manualFolder, "タブ", { url: "https://manual.example/" });
+    const manualSubfolder = fake.helpers.seedNode(ids.manual, "手動のサブフォルダ", { dateAdded: NOW - 100 * DAY });
+    const oldDirect = fake.helpers.seedNode(ids.old, "old 直下の利用者フォルダ", { dateAdded: NOW - 100 * DAY });
+    const oldDirectChild = fake.helpers.seedNode(oldDirect, "old 直下の子", { url: "https://old.example/" });
+    const nestedParent = fake.helpers.seedNode(ids.oldAuto, "old 内の親フォルダ", { dateAdded: NOW - 100 * DAY });
+    const deepFolder = fake.helpers.seedNode(nestedParent, "さらに下のフォルダ", { dateAdded: NOW - 100 * DAY });
+    const oldBookmark = fake.helpers.seedNode(ids.oldAuto, "old 内のブックマーク", {
+      url: "https://bookmark.example/",
+      dateAdded: NOW - 100 * DAY,
+    });
+
+    await handlers.onAlarm({ name: AGING_ALARM_NAME });
+
+    expect(fake.helpers.children(ids.manual).map((child) => child.id)).toEqual([manualFolder, manualSubfolder]);
+    expect(fake.helpers.children(manualFolder).map((child) => child.id)).toEqual([manualTab]);
+    expect(fake.helpers.children(ids.old).map((child) => child.id)).toEqual([ids.oldAuto, oldDirect]);
+    expect(fake.helpers.children(oldDirect).map((child) => child.id)).toEqual([oldDirectChild]);
+    expect(fake.helpers.children(ids.oldAuto).map((child) => child.id)).toEqual([nestedParent, oldBookmark]);
+    expect(fake.helpers.children(nestedParent).map((child) => child.id)).toEqual([deepFolder]);
+    expect(readOldMovedAt()).toEqual({ [nestedParent]: NOW });
+    expect(fake.chrome.bookmarks.removeTree).not.toHaveBeenCalled();
+  });
+
+  it("removeTree には old/自動バックアップ/ 直下の期限切れフォルダだけを渡し、old から出た記録を掃除する", async () => {
+    const expired = fake.helpers.seedNode(ids.oldAuto, "期限切れ", { dateAdded: NOW - 40 * DAY });
+    const movedOut = fake.helpers.seedNode(ids.oldAuto, "old から出た", { dateAdded: NOW - 40 * DAY });
+    await fake.chrome.bookmarks.move(movedOut, { parentId: ids.manual });
+    fake.local.seed({
+      [OLD_MOVED_AT_STORAGE_KEY]: {
+        [expired]: NOW - 8 * DAY,
+        [movedOut]: NOW - 100 * DAY,
+      },
+    });
+
+    await handlers.onAlarm({ name: AGING_ALARM_NAME });
+
+    expect(fake.chrome.bookmarks.removeTree.mock.calls.map(([id]) => id)).toEqual([expired]);
+    expect(fake.helpers.children(ids.oldAuto)).toEqual([]);
+    expect(fake.helpers.children(ids.manual).map((child) => child.id)).toEqual([movedOut]);
+    expect(readOldMovedAt()).toEqual({});
+    expect(fake.chrome.bookmarks.remove).not.toHaveBeenCalled();
+  });
+
+  it("削除直前の get で親が old/自動バックアップ/ ではないと分かったフォルダは消さない", async () => {
+    const noLongerInOld = fake.helpers.seedNode(ids.oldAuto, "移動されたフォルダ", { dateAdded: NOW - 40 * DAY });
+    fake.local.seed({ [OLD_MOVED_AT_STORAGE_KEY]: { [noLongerInOld]: NOW - 8 * DAY } });
+    const originalGet = fake.chrome.bookmarks.get.getMockImplementation()!;
+    fake.chrome.bookmarks.get.mockImplementation(async (id) => {
+      if (id === noLongerInOld) await fake.chrome.bookmarks.move(id, { parentId: ids.manual });
+      return originalGet(id);
+    });
+
+    await handlers.onAlarm({ name: AGING_ALARM_NAME });
+
+    expect(fake.chrome.bookmarks.removeTree).not.toHaveBeenCalled();
+    expect(fake.helpers.children(ids.manual).map((child) => child.id)).toEqual([noLongerInOld]);
+    expect(fake.helpers.children(ids.oldAuto)).toEqual([]);
+    expect(readOldMovedAt()).toEqual({});
+  });
+
+  it("old/自動バックアップ/ 直下以外のフォルダは removeTree で消せず、中身も残る", async () => {
+    const manualFolder = fake.helpers.seedNode(ids.manual, "手動保存のフォルダ");
+    const manualChild = fake.helpers.seedNode(manualFolder, "残るブックマーク", { url: "https://manual.example/" });
+
+    await expect(fake.chrome.bookmarks.removeTree(manualFolder)).rejects.toThrow("only permitted");
+
+    expect(fake.helpers.children(ids.manual)).toEqual([{ id: manualFolder, title: "手動保存のフォルダ" }]);
+    expect(fake.helpers.children(manualFolder)).toEqual([
+      { id: manualChild, title: "残るブックマーク", url: "https://manual.example/" },
+    ]);
   });
 
   it("別名の alarm では何もしない", async () => {
+    const agedAuto = fake.helpers.seedNode(ids.auto, "期限を超えた自動バックアップ", { dateAdded: NOW - 8 * DAY });
+    const expiredOld = fake.helpers.seedNode(ids.oldAuto, "期限切れ", { dateAdded: NOW - 40 * DAY });
+    fake.local.seed({ [OLD_MOVED_AT_STORAGE_KEY]: { [expiredOld]: NOW - 8 * DAY } });
+    const before = {
+      manual: fake.helpers.children(ids.manual),
+      auto: fake.helpers.children(ids.auto),
+      old: fake.helpers.children(ids.old),
+      oldAuto: fake.helpers.children(ids.oldAuto),
+    };
+
     await handlers.onAlarm({ name: "something-else" });
-    expect(fake.helpers.path("TabBundle", "old", "自動バックアップ")).toBeUndefined();
+
+    expect(fake.helpers.path("TabBundle", "old", "自動バックアップ")).toBe(ids.oldAuto);
+    expect(fake.helpers.children(ids.manual)).toEqual(before.manual);
+    expect(fake.helpers.children(ids.auto)).toEqual(before.auto);
+    expect(fake.helpers.children(ids.old)).toEqual(before.old);
+    expect(fake.helpers.children(ids.oldAuto)).toEqual(before.oldAuto);
+    expect(fake.helpers.children(ids.auto).map((child) => child.id)).toContain(agedAuto);
     expect(fake.chrome.bookmarks.move).not.toHaveBeenCalled();
+    expect(fake.chrome.bookmarks.removeTree).not.toHaveBeenCalled();
+    expect(
+      fake.chrome.storage.local.set.mock.calls.filter(([items]) => OLD_MOVED_AT_STORAGE_KEY in items),
+    ).toEqual([]);
   });
 });
 

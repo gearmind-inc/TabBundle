@@ -139,8 +139,43 @@ export function createFakeChrome() {
     remove: vi.fn(async () => {
       throw new Error("remove must not be called");
     }),
-    removeTree: vi.fn(async () => {
-      throw new Error("removeTree must not be called");
+    removeTree: vi.fn(async (id: string) => {
+      await yieldTurn();
+      const node = requireNode(id);
+      const autoFolder = node.parentId !== undefined ? nodes.get(node.parentId) : undefined;
+      const oldFolder = autoFolder?.parentId !== undefined ? nodes.get(autoFolder.parentId) : undefined;
+      const bundleFolder = oldFolder?.parentId !== undefined ? nodes.get(oldFolder.parentId) : undefined;
+      const otherBookmarks = bundleFolder?.parentId !== undefined ? nodes.get(bundleFolder.parentId) : undefined;
+      if (
+        node.url !== undefined ||
+        autoFolder?.title !== "自動バックアップ" ||
+        autoFolder.url !== undefined ||
+        oldFolder?.title !== "old" ||
+        oldFolder.url !== undefined ||
+        bundleFolder?.title !== "TabBundle" ||
+        bundleFolder.url !== undefined ||
+        otherBookmarks?.title !== "その他のブックマーク" ||
+        otherBookmarks.folderType !== "other" ||
+        otherBookmarks.url !== undefined
+      ) {
+        throw new Error("removeTree is only permitted for folders directly under TabBundle/old/自動バックアップ/ in Other bookmarks");
+      }
+
+      const removeDescendants = (current: StoredNode): void => {
+        for (const childId of [...current.childIds]) {
+          const child = requireNode(childId);
+          removeDescendants(child);
+          nodes.delete(childId);
+        }
+        current.childIds.length = 0;
+      };
+      removeDescendants(node);
+      if (node.parentId !== undefined) {
+        const parent = requireNode(node.parentId);
+        const index = parent.childIds.indexOf(id);
+        if (index !== -1) parent.childIds.splice(index, 1);
+      }
+      nodes.delete(id);
     }),
   };
 
