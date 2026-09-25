@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "TabBundle",
+  "version": "0.1.0",
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": ["tabs", "bookmarks", "storage", "alarms"]
+}
