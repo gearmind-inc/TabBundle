@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { AGING_DAYS } from "../src/constants";
-import { isAged, selectAgingTargets } from "../src/core/aging";
+import { DELETE_FROM_OLD_DAYS, MOVE_TO_OLD_DAYS } from "../src/constants";
+import { isAged, normalizeOldMovedAt, planOldCleanup, selectAgingTargets } from "../src/core/aging";
 import { isExcludedTab, selectSavableTabs } from "../src/core/exclude";
 import { buildBackupFolderName, formatLocalDateTime } from "../src/core/folderName";
 import { chooseOtherBookmarksId, findFolderByTitle } from "../src/core/otherBookmarks";
@@ -74,20 +74,68 @@ describe("toShadowTab", () => {
 describe("isAged / selectAgingTargets", () => {
   const now = new Date(2026, 8, 25, 12, 0).getTime();
 
-  it("30 日ちょうどは移さず、それを超えたら移す", () => {
-    expect(isAged(now - AGING_DAYS * DAY, now)).toBe(false);
-    expect(isAged(now - AGING_DAYS * DAY - 1, now)).toBe(true);
+  it("6 日と 7 日ちょうどは移さず、7 日 + 1ms と 8 日は移す", () => {
+    expect(isAged(now - 6 * DAY, now)).toBe(false);
+    expect(isAged(now - MOVE_TO_OLD_DAYS * DAY, now)).toBe(false);
+    expect(isAged(now - MOVE_TO_OLD_DAYS * DAY - 1, now)).toBe(true);
+    expect(isAged(now - 8 * DAY, now)).toBe(true);
   });
 
   it("古いフォルダだけを dateAdded の古い順に返す (ブックマークは対象外)", () => {
     const children = [
-      { id: "new", dateAdded: now - DAY },
-      { id: "old2", dateAdded: now - 40 * DAY },
+      { id: "new", dateAdded: now - 6 * DAY },
+      { id: "old2", dateAdded: now - 8 * DAY },
       { id: "bm", url: "https://x.example/", dateAdded: now - 90 * DAY },
-      { id: "old1", dateAdded: now - 60 * DAY },
+      { id: "boundary", dateAdded: now - 7 * DAY },
+      { id: "old1", dateAdded: now - 7 * DAY - 1 },
       { id: "nodate" },
     ];
-    expect(selectAgingTargets(children, now).map((c) => c.id)).toEqual(["old1", "old2"]);
+    expect(selectAgingTargets(children, now).map((c) => c.id)).toEqual(["old2", "old1"]);
+  });
+});
+
+describe("planOldCleanup", () => {
+  const now = new Date(2026, 8, 25, 12, 0).getTime();
+
+  it("old に入って 6 日・7 日ちょうどは残し、7 日 + 1ms と 8 日は削除する", () => {
+    const children = [
+      { id: "six" },
+      { id: "seven" },
+      { id: "seven-plus-one" },
+      { id: "eight" },
+    ];
+    const records = {
+      six: now - 6 * DAY,
+      seven: now - DELETE_FROM_OLD_DAYS * DAY,
+      "seven-plus-one": now - DELETE_FROM_OLD_DAYS * DAY - 1,
+      eight: now - 8 * DAY,
+    };
+
+    expect(planOldCleanup(children, records, now)).toEqual({
+      toDelete: ["seven-plus-one", "eight"],
+      nextRecords: { six: records.six, seven: records.seven },
+    });
+  });
+
+  it("記録のないフォルダは今回の時刻を記録し、url を持つ物と old に無い id は残さない", () => {
+    const result = planOldCleanup(
+      [
+        { id: "unrecorded" },
+        { id: "bookmark", url: "https://x.example/" },
+      ],
+      { elsewhere: now - 100 * DAY },
+      now,
+    );
+
+    expect(result).toEqual({ toDelete: [], nextRecords: { unrecorded: now } });
+  });
+
+  it("壊れた記録と有限でない値を読み飛ばす", () => {
+    expect(normalizeOldMovedAt({ valid: now, text: "123", nan: Number.NaN, infinity: Infinity, missing: undefined })).toEqual({
+      valid: now,
+    });
+    expect(normalizeOldMovedAt(null)).toEqual({});
+    expect(normalizeOldMovedAt([now])).toEqual({});
   });
 });
 
