@@ -25,3 +25,19 @@ export const PENDING_VERIFY_STORAGE_KEY = "pendingVerify";
 export const OLD_MOVED_AT_STORAGE_KEY = "oldMovedAt";
 /** chrome.storage.session のキー (今のブラウザセッションの ID) */
 export const SESSION_STORAGE_KEY = "sessionId";
+
+/** chrome.storage.local のキー (本文を保存するホスト名の一覧。ON/OFF の正本) */
+export const PAGE_TEXT_HOSTS_STORAGE_KEY = "pageTextHosts";
+/** chrome.storage.local の本文のキーの先頭 (この後ろに URL をそのまま付ける。1 URL = 1 キー) */
+export const PAGE_TEXT_KEY_PREFIX = "pageText:";
+/** 1 ページで保存する本文の最大文字数 (先頭から) */
+export const PAGE_TEXT_MAX_CHARS = 20_000;
+/** ブックマークが消えた後、本文の片付けを走らせるまで待つ時間 (ms)。消える操作が続く間はまとめる */
+export const PAGE_TEXT_GC_DEBOUNCE_MS = 5_000;
+export const PAGE_TEXT_GC_MAX_WAIT_MS = 30_000;
+
+/** 右クリックのメニュー (本文を保存する ON/OFF) の id */
+export const PAGE_TEXT_MENU_ID = "tabbundle-page-text";
+/** 本文を保存するサイトのタブに付けるバッジ */
+export const PAGE_TEXT_BADGE_TEXT = "ON";
+export const PAGE_TEXT_BADGE_COLOR = "#1a7f37";

@@ -29,6 +29,16 @@ async function findOtherBookmarksId(): Promise<string> {
   return chooseOtherBookmarksId(candidates);
 }
 
+/**
+ * 既にある TabBundle フォルダの id を、読むだけで探す (無ければ undefined。フォルダは作らない)。
+ * ensureBookmarkLayout と同じ「その他のブックマーク」を選ぶ。ポップアップと本文の片付けが使う。
+ */
+export async function findRootFolderId(): Promise<string | undefined> {
+  const otherId = await findOtherBookmarksId();
+  const children = await chrome.bookmarks.getChildren(otherId);
+  return findFolderByTitle(children, ROOT_FOLDER_TITLE)?.id;
+}
+
 /** 親の直下で title が一致し url を持たない最初のフォルダを返す。無ければ作る (末尾に追加) */
 async function findOrCreateFolder(parentId: string, title: string): Promise<string> {
   const children = await chrome.bookmarks.getChildren(parentId);
