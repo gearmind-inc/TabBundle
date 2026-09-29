@@ -107,12 +107,10 @@ npm run build      # dist/ に拡張機能を作る
 - Chrome が受け付けない URL などで 1 件のブックマークの作成に失敗した場合、そのタブは保存されません。エラーがコンソールに出るだけで、やり直しはしません
 - 拡張機能の更新・再読み込み・無効から有効に戻したときは、開いているウィンドウが「(再起動前)」付きで 1 回余分に保存されます (失うより二重に残す方を選んでいます)
 
-## 仕様
+## ライセンス
 
-細かい動きは [specs/](specs/) にあります。
+MIT License です。全文は [LICENSE](LICENSE) をご覧ください。
 
-- [specs/bookmark-layout.md](specs/bookmark-layout.md): ブックマークの置き場とフォルダの並び
-- [specs/auto-backup.md](specs/auto-backup.md): 自動バックアップの仕組み
-- [specs/aging.md](specs/aging.md): 7 日後の移動と、old で 7 日後の削除
-- [specs/popup-search.md](specs/popup-search.md): ポップアップでのページ検索
-- [specs/page-text.md](specs/page-text.md): サイトごとの本文の保存 (ON / OFF・保存・片付け)
+## プライバシー
+
+タブ情報と、ON にしたサイトの本文は Chrome 内で扱います。拡張機能は外部へ送信しません。Chrome のブックマーク同期を有効にしている場合、作成したブックマークは Chrome によって同期されることがあります。詳しくは [プライバシーポリシー](PRIVACY.md) をご覧ください。
