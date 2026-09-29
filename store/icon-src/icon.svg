@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- TabBundle icon (used for 128px and 48px).
+       Art stays inside x/y 16..112 (the 96x96 safe area); the outer 16px stays transparent.
+       Idea: several browser tabs gathered into one window/folder that carries a bookmark ribbon.
+       The navy outline keeps it readable on light backgrounds, the filled colors on dark ones. -->
+  <g stroke="#16336B" stroke-width="4" stroke-linejoin="round">
+    <!-- back tabs (other sites); their bottoms are hidden under the body -->
+    <path d="M18 56 V30 Q18 24 24 24 H46 Q52 24 52 30 V56 Z" fill="#FF7B5C"/>
+    <path d="M44 56 V30 Q44 24 50 24 H72 Q78 24 78 30 V56 Z" fill="#FFC23D"/>
+    <!-- window / folder body joined with the active tab -->
+    <path d="M18 56 Q18 44 30 44 H70 V24 Q70 18 76 18 H104 Q110 18 110 24 V98 Q110 110 98 110 H30 Q18 110 18 98 Z" fill="#2F6FE4"/>
+  </g>
+  <!-- favicon dots on the tabs -->
+  <circle cx="30" cy="35" r="4.5" fill="#FFFFFF"/>
+  <circle cx="56" cy="35" r="4.5" fill="#FFFFFF"/>
+  <circle cx="82" cy="30" r="4.5" fill="#FFFFFF"/>
+  <!-- bookmark ribbon -->
+  <path d="M50 58 Q50 55 53 55 H75 Q78 55 78 58 V100 L64 89 L50 100 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"/>
+</svg>
