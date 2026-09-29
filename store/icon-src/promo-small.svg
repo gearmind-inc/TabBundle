@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 280">
+  <!-- Chrome Web Store small promo tile (440x280). Solid background, icon.svg + name + tagline. -->
+  <rect width="440" height="280" fill="#EAF1FD"/>
+  <circle cx="89" cy="140" r="80" fill="#D3E2FB"/>
+  <!-- icon.svg's 96x96 art area (16..112) comes out about 128px wide here (x 25..153) -->
+  <image href="icon.svg" x="4" y="55" width="170" height="170"/>
+  <g font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" fill="#16336B">
+    <text x="176" y="128" font-size="42" font-weight="700" letter-spacing="-0.5">TabBundle</text>
+    <text x="178" y="164" font-size="18" font-weight="500">Your open tabs, saved</text>
+    <text x="178" y="188" font-size="18" font-weight="500">as bookmarks automatically.</text>
+  </g>
+</svg>

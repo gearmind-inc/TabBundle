@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- TabBundle icon, simplified for 16px (pixel-aligned, no outline, no favicon dots).
+       Same idea as icon.svg: tabs on top of a window/folder that carries a bookmark ribbon. -->
+  <!-- back tabs -->
+  <path d="M0 7 V3.5 Q0 2 1.5 2 H4.5 Q6 2 6 3.5 V7 Z" fill="#E8603F"/>
+  <path d="M4 7 V3.5 Q4 2 5.5 2 H7.5 Q9 2 9 3.5 V7 Z" fill="#F2A900"/>
+  <!-- body + active tab -->
+  <path d="M0 7 Q0 5 2 5 H9 V2.5 Q9 1 10.5 1 H14.5 Q16 1 16 2.5 V13 Q16 15 14 15 H2 Q0 15 0 13 Z" fill="#2F6FE4"/>
+  <!-- bookmark ribbon -->
+  <path d="M5 7 H11 V13 L8 11 L5 13 Z" fill="#FFFFFF"/>
+</svg>
