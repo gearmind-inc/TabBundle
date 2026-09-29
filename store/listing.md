@@ -46,6 +46,14 @@ TabBundle は、通常ウィンドウで開いていたタブを Chrome のブ�
 
 Limited Use: データは、タブのバックアップと保存済みページの検索という単一の目的にだけ使います。第三者へ送信・提供・販売しません。個人向け広告に使わず、広告プラットフォームやデータブローカーへ渡しません。信用判断・貸付にも使いません。開発者などの人が保存データを閲覧する機能はありません。ダッシュボードの認証文言は実画面で確認します。
 
+### 提供者・サイト・問い合わせ先の欄 (下書き)
+
+- 提供者名: GearMind Inc.
+- 取引者 (trader) の申告で登記上の名前を求められた場合は「株式会社GearMind」を入力してください。
+- サイト (ホームページの URL): https://gearmind.cc/
+- 問い合わせ先 (サポートの URL): https://gearmind.cc/contact/
+- メールアドレスの欄は、このファイルに書かずダッシュボードで直接入れる
+
 ### プライバシーポリシーの URL 欄
 
 ユーザーが置き場所を決めてから入れる。
@@ -94,6 +102,14 @@ In the dashboard, check categories corresponding to “Web browsing activity” 
 
 Limited Use: TabBundle uses data only to back up tabs and search saved pages. It does not send, share, or sell data to third parties. It does not use data for personalized advertising, pass it to ad platforms or data brokers, or use it for credit decisions or lending. No feature lets the developer or other people read stored user data. Confirm the exact certification wording in the dashboard.
 
+### Provider, website, and support fields (draft)
+
+- Publisher name: GearMind Inc.
+- If the trader declaration asks for the registered legal name, enter 株式会社GearMind.
+- Website (homepage URL): https://gearmind.cc/
+- Support URL: https://gearmind.cc/contact/
+- Enter the email address directly in the dashboard; do not write it in this file.
+
 ### Privacy policy URL field
 
 Enter it after the user chooses where to host the policy.
@@ -104,3 +120,5 @@ Enter it after the user chooses where to host the policy.
 - データ種別のチェックボックスの正確な表示名。/ Exact names of the data-type checkboxes.
 - Limited Use などの認証チェックボックスの正確な文言。/ Exact wording of the certification checkboxes.
 - 詳しい説明の文字数上限。/ Character limit for the detailed description.
+- 提供者名・サイト・問い合わせ先の欄の正確な名前と置き場所 (アカウント設定か掲載情報か)。/ Exact names and locations (account settings or store listing) of the publisher name, website, and support fields.
+- 法人として公開するときの「取引者 (trader)」の申告と、そのとき表示される連絡先の項目。/ The trader declaration for publishing as a company and which contact details it displays.

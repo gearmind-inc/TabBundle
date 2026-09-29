@@ -1,8 +1,12 @@
 # TabBundle プライバシーポリシー
 
-最終更新日: 2026-09-29
+最終更新日: 2026-09-30
 
 ## 日本語
+
+### 提供者
+
+TabBundle は GearMind Inc. (株式会社GearMind) が提供します。会社のウェブサイトは https://gearmind.cc/ です。このポリシーでいう「開発者」は GearMind Inc. を指します。
 
 ### 集める情報と使い方
 
@@ -43,11 +47,15 @@ TabBundle が作るブックマークは、Chrome の通常のブックマーク
 
 ### 問い合わせと変更
 
-問い合わせは GitHub の TabBundle リポジトリの Issues で受け付けます。このポリシーを変更した場合は、ここに変更後の内容と最終更新日を掲載します。
+問い合わせは GearMind Inc. のお問い合わせフォーム (https://gearmind.cc/contact/) で受け付けます。不具合の報告や機能の要望は、GitHub の TabBundle リポジトリの Issues でも受け付けます。このポリシーを変更した場合は、ここに変更後の内容と最終更新日を掲載します。
 
 ## English
 
-Last updated: 2026-09-29
+Last updated: 2026-09-30
+
+### Provider
+
+TabBundle is provided by GearMind Inc. (株式会社GearMind). For more information, visit https://gearmind.cc/. In this policy, “the developer” means GearMind Inc.
 
 ### Data collected and how it is used
 
@@ -88,4 +96,4 @@ You can turn a site OFF using the right-click menu and delete TabBundle bookmark
 
 ### Contact and changes
 
-For questions, use Issues in the TabBundle GitHub repository. If this policy changes, the revised text and last-updated date will be posted here.
+For questions, use the GearMind Inc. contact form (https://gearmind.cc/contact/). Bug reports and feature requests are also welcome in Issues in the TabBundle GitHub repository. If this policy changes, the revised text and last-updated date will be posted here.
