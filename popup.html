@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>TabBundle</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --fg: #1f2328;
+        --muted: #656d76;
+        --border: #d0d7de;
+        --hover: #f3f4f6;
+        --accent: #0969da;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1f2328;
+          --fg: #e6edf3;
+          --muted: #9198a1;
+          --border: #3d444d;
+          --hover: #2d333b;
+          --accent: #4493f8;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        width: 560px;
+        max-height: 600px;
+        background: var(--bg);
+        color: var(--fg);
+        font: 13px/1.4 system-ui, sans-serif;
+      }
+      main {
+        display: flex;
+        flex-direction: column;
+        max-height: 600px;
+        padding: 12px;
+        gap: 8px;
+      }
+      form {
+        display: flex;
+        gap: 6px;
+      }
+      input[type="search"] {
+        flex: 1;
+        min-width: 0;
+        padding: 6px 8px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--bg);
+        color: var(--fg);
+        font: inherit;
+      }
+      button {
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+      }
+      form button {
+        padding: 6px 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--hover);
+      }
+      ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      #suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+      #suggestions:empty {
+        display: none;
+      }
+      #suggestions button {
+        padding: 2px 8px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: transparent;
+      }
+      #status {
+        margin: 0;
+        color: var(--muted);
+      }
+      #status:empty {
+        display: none;
+      }
+      #results {
+        overflow-y: auto;
+        min-height: 0;
+        flex: 1;
+        border-top: 1px solid var(--border);
+      }
+      #results button {
+        display: block;
+        width: 100%;
+        padding: 6px 4px;
+        border: 0;
+        border-bottom: 1px solid var(--border);
+        background: transparent;
+        text-align: left;
+      }
+      #results button:hover,
+      #results button:focus-visible {
+        background: var(--hover);
+      }
+      .title,
+      .url {
+        display: block;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      .url {
+        color: var(--accent);
+        font-size: 12px;
+      }
+      .date {
+        color: var(--muted);
+        font-size: 11px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <form id="search-form" role="search">
+        <input id="query" type="search" placeholder="タイトル・URL・本文で検索" autocomplete="off" autofocus />
+        <button type="submit">検索</button>
+      </form>
+      <ul id="suggestions" aria-label="ドメインの候補"></ul>
+      <p id="status" role="status"></p>
+      <ul id="results" aria-label="検索結果"></ul>
+    </main>
+    <script type="module" src="/src/popup.ts"></script>
+  </body>
+</html>

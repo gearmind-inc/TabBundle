@@ -17,6 +17,7 @@ interface StoredNode {
 }
 
 export interface FakeTab {
+  id?: number;
   url?: string;
   pendingUrl?: string;
   title?: string;
@@ -24,6 +25,9 @@ export interface FakeTab {
   index: number;
   pinned: boolean;
   incognito?: boolean;
+  active?: boolean;
+  discarded?: boolean;
+  status?: string;
 }
 
 function clone<T>(value: T): T {
@@ -45,6 +49,13 @@ function createFakeStorageArea() {
       await yieldTurn();
       data = { ...data, ...clone(items) };
     }),
+    remove: vi.fn(async (keys: string | string[]) => {
+      await yieldTurn();
+      const list = Array.isArray(keys) ? keys : [keys];
+      data = Object.fromEntries(Object.entries(data).filter(([key]) => !list.includes(key)));
+    }),
+    /** テスト用: 今入っているキーの一覧 */
+    keys: () => Object.keys(data),
     /** テスト用: 中身を直接見る / 入れる / 消す */
     peek: (key: string) => clone(data[key]),
     seed: (items: Record<string, unknown>) => {
@@ -96,11 +107,21 @@ export function createFakeChrome() {
     return node;
   };
 
+  const toSubTree = (node: StoredNode): chrome.bookmarks.BookmarkTreeNode => {
+    const result = toTreeNode(node);
+    if (node.url === undefined) result.children = node.childIds.map((childId) => toSubTree(nodes.get(childId)!));
+    return result;
+  };
+
   // getTree は実装で使わない (無いので呼ぶと失敗する)
   const bookmarks = {
     getChildren: vi.fn(async (id: string) => {
       await yieldTurn();
       return requireNode(id).childIds.map((childId) => toTreeNode(nodes.get(childId)!));
+    }),
+    getSubTree: vi.fn(async (id: string) => {
+      await yieldTurn();
+      return [toSubTree(requireNode(id))];
     }),
     get: vi.fn(async (id: string) => {
       await yieldTurn();
@@ -180,10 +201,119 @@ export function createFakeChrome() {
   };
 
   let tabs: FakeTab[] = [];
+  /** 最後にフォーカスしたウィンドウ (テストで決めたときだけ lastFocusedWindow で絞り込む) */
+  let lastFocusedWindowId: number | undefined;
   const tabsApi = {
-    query: vi.fn(async (_query: chrome.tabs.QueryInfo) => {
+    // active / windowId / lastFocusedWindow だけ絞り込む (それ以外の条件は無視して全部返す)
+    query: vi.fn(async (query: chrome.tabs.QueryInfo) => {
       await yieldTurn();
-      return clone(tabs);
+      return clone(
+        tabs.filter(
+          (tab) =>
+            (query.active === undefined || (tab.active ?? false) === query.active) &&
+            (query.windowId === undefined || tab.windowId === query.windowId) &&
+            (query.lastFocusedWindow !== true ||
+              lastFocusedWindowId === undefined ||
+              tab.windowId === lastFocusedWindowId),
+        ),
+      );
+    }),
+    get: vi.fn(async (tabId: number) => {
+      await yieldTurn();
+      const found = tabs.find((tab) => tab.id === tabId);
+      if (!found) throw new Error(`No tab with id: ${tabId}.`);
+      return clone(found);
+    }),
+    create: vi.fn(async (properties: chrome.tabs.CreateProperties) => {
+      await yieldTurn();
+      return { id: 9999, windowId: 1, index: 0, pinned: false, url: properties.url };
+    }),
+  };
+
+  // ---- 本文の保存で使う API ----
+
+  const hostPattern = (url: string | undefined): string | undefined => {
+    try {
+      const parsed = new URL(url ?? "");
+      return `${parsed.protocol}//${parsed.hostname}/*`;
+    } catch {
+      return undefined;
+    }
+  };
+
+  const grantedOrigins = new Set<string>();
+  let nextPermissionAnswer: boolean | Error = true;
+  const permissions = {
+    request: vi.fn((details: chrome.permissions.Permissions): Promise<boolean> => {
+      const answer = nextPermissionAnswer;
+      return (async () => {
+        await yieldTurn();
+        if (answer instanceof Error) throw answer;
+        if (answer) for (const origin of details.origins ?? []) grantedOrigins.add(origin);
+        return answer;
+      })();
+    }),
+    remove: vi.fn(async (details: chrome.permissions.Permissions) => {
+      await yieldTurn();
+      for (const origin of details.origins ?? []) grantedOrigins.delete(origin);
+      return true;
+    }),
+    contains: vi.fn(async (details: chrome.permissions.Permissions) => {
+      await yieldTurn();
+      return (details.origins ?? []).every((origin) => grantedOrigins.has(origin));
+    }),
+  };
+
+  /** ページの本文 (url → innerText) と、executeScript を失敗させる url */
+  const pageBodies = new Map<string, string>();
+  const failingUrls = new Set<string>();
+  const scripting = {
+    executeScript: vi.fn(
+      async (injection: { target: { tabId: number }; func: (...args: never[]) => unknown; args?: unknown[] }) => {
+        await yieldTurn();
+        const found = tabs.find((tab) => tab.id === injection.target.tabId);
+        if (!found?.url) throw new Error(`No tab with id: ${injection.target.tabId}.`);
+        if (failingUrls.has(found.url)) throw new Error("Cannot access contents of the page.");
+        // 本物と同じく、ホストの権限が無ければ失敗する
+        const pattern = hostPattern(found.url);
+        if (pattern === undefined || !grantedOrigins.has(pattern)) {
+          throw new Error("Cannot access contents of the page. Extension manifest must request permission.");
+        }
+        const maxChars = typeof injection.args?.[0] === "number" ? injection.args[0] : Infinity;
+        return [{ frameId: 0, result: { href: found.url, text: (pageBodies.get(found.url) ?? "").slice(0, maxChars) } }];
+      },
+    ),
+  };
+
+  const badges = new Map<number, string>();
+  const action = {
+    setBadgeText: vi.fn(async (details: { tabId?: number; text: string }) => {
+      await yieldTurn();
+      if (details.tabId !== undefined) badges.set(details.tabId, details.text);
+    }),
+    setBadgeBackgroundColor: vi.fn(async (_details: { tabId?: number; color: string }) => {
+      await yieldTurn();
+    }),
+  };
+
+  const menuItems = new Map<string, Record<string, unknown>>();
+  const contextMenus = {
+    create: vi.fn((properties: chrome.contextMenus.CreateProperties, callback?: () => void) => {
+      // 本物は同じ id を 2 回 create すると lastError になる
+      if (properties.id !== undefined && menuItems.has(properties.id)) throw new Error(`Cannot create item with duplicate id ${properties.id}`);
+      menuItems.set(String(properties.id), { ...properties });
+      callback?.();
+      return properties.id ?? "";
+    }),
+    update: vi.fn(async (id: string | number, properties: Record<string, unknown>) => {
+      await yieldTurn();
+      const item = menuItems.get(String(id));
+      if (!item) throw new Error(`Cannot find menu item with id ${id}`);
+      menuItems.set(String(id), { ...item, ...properties });
+    }),
+    removeAll: vi.fn(async () => {
+      await yieldTurn();
+      menuItems.clear();
     }),
   };
 
@@ -208,6 +338,12 @@ export function createFakeChrome() {
     tabs: tabsApi,
     alarms,
     storage: { local, session },
+    permissions,
+    scripting,
+    action,
+    contextMenus,
+    runtime: { lastError: undefined as chrome.runtime.LastError | undefined },
+    windows: { WINDOW_ID_NONE: -1 },
   };
 
   /** テスト用の操作 */
@@ -215,6 +351,24 @@ export function createFakeChrome() {
     setTabs(next: FakeTab[]) {
       tabs = clone(next);
     },
+    setLastFocusedWindow(windowId: number) {
+      lastFocusedWindowId = windowId;
+    },
+    /** 次の permissions.request の答え (true = 許可, false = 拒否, Error = 失敗) */
+    answerPermissionRequest(answer: boolean | Error) {
+      nextPermissionAnswer = answer;
+    },
+    grantedOrigins: () => [...grantedOrigins].sort(),
+    /** ページの本文 (executeScript で読める innerText) を置く */
+    setPageBody(url: string, text: string) {
+      pageBodies.set(url, text);
+    },
+    /** この url のページでは executeScript を失敗させる */
+    failScriptOn(url: string) {
+      failingUrls.add(url);
+    },
+    badge: (tabId: number) => badges.get(tabId),
+    menuItem: (id: string) => menuItems.get(id),
     /** 指定した親の直下に、dateAdded などを指定してノードを置く */
     seedNode(
       parentId: string,

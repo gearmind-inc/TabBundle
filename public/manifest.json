@@ -6,5 +6,10 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "permissions": ["tabs", "bookmarks", "storage", "alarms"]
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "TabBundle"
+  },
+  "permissions": ["tabs", "bookmarks", "storage", "alarms", "contextMenus", "scripting", "unlimitedStorage"],
+  "optional_host_permissions": ["https://*/*", "http://*/*"]
 }
