@@ -109,11 +109,11 @@ npm run build      # dist/ に拡張機能を作る
 
 ## 提供者と問い合わせ
 
-TabBundle は株式会社GearMind (https://gearmind.cc/) が提供しています。問い合わせは [お問い合わせフォーム](https://gearmind.cc/contact/) で受け付けます。不具合の報告や機能の要望は、このリポジトリの Issues でも受け付けます。
+TabBundle は GearMind Inc. (https://gearmind.cc/) が提供しています。問い合わせは [お問い合わせフォーム](https://gearmind.cc/contact/) で受け付けます。不具合の報告や機能の要望は、このリポジトリの Issues でも受け付けます。
 
 ## ライセンス
 
-MIT License です (著作権者: 株式会社GearMind)。全文は [LICENSE](LICENSE) をご覧ください。
+MIT License です (著作権者: GearMind Inc.)。全文は [LICENSE](LICENSE) をご覧ください。
 
 ## プライバシー
 

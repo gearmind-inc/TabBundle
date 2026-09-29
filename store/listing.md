@@ -48,7 +48,8 @@ Limited Use: データは、タブのバックアップと保存済みページ�
 
 ### 提供者・サイト・問い合わせ先の欄 (下書き)
 
-- 提供者名: 株式会社GearMind
+- 提供者名: GearMind Inc.
+- 取引者 (trader) の申告で登記上の名前を求められた場合は「株式会社GearMind」を入力してください。
 - サイト (ホームページの URL): https://gearmind.cc/
 - 問い合わせ先 (サポートの URL): https://gearmind.cc/contact/
 - メールアドレスの欄は、このファイルに書かずダッシュボードで直接入れる
@@ -103,7 +104,8 @@ Limited Use: TabBundle uses data only to back up tabs and search saved pages. It
 
 ### Provider, website, and support fields (draft)
 
-- Publisher name: 株式会社GearMind
+- Publisher name: GearMind Inc.
+- If the trader declaration asks for the registered legal name, enter 株式会社GearMind.
 - Website (homepage URL): https://gearmind.cc/
 - Support URL: https://gearmind.cc/contact/
 - Enter the email address directly in the dashboard; do not write it in this file.
