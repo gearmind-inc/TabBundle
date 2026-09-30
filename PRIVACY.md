@@ -4,96 +4,92 @@
 
 ## 日本語
 
-### 提供者
+### 提供者と適用範囲
 
-TabBundle は GearMind Inc. (株式会社GearMind) が提供します。会社のウェブサイトは https://gearmind.cc/ です。このポリシーでいう「開発者」は GearMind Inc. を指します。
+TabBundle は [GearMind Inc.（株式会社GearMind）](https://gearmind.cc/) が提供する Chrome 拡張機能です。このポリシーは、TabBundle が扱う情報について説明します。
 
-### 集める情報と使い方
+### 取得する情報と利用目的
 
-TabBundle は、通常ウィンドウで開いているタブの URL、タイトル、固定の有無、並び順を読みます。タブの一覧を控え、自動バックアップ用のブックマークを作るために使います。保存したブックマークのタイトルと URL は、ポップアップの検索にも使います。
+通常ウィンドウのタブの URL、タイトル、固定の有無、並び順を取得し、ブックマークへの自動保存と検索に使います。保存・復旧に必要なウィンドウなどの識別子と日時も記録します。
 
-ページ本文の保存は、最初はすべてのサイトで OFF です。右クリックメニューで ON にしたホスト名と、該当ページの表示本文の先頭 20,000 字を扱います。ON の判定はホスト名の完全一致です。本文は URL ごとに保存し、ポップアップの検索に使います。休止中のタブや読み取れないページの本文は保存しません。本文には、開いたページによって個人情報が含まれる可能性があります。
+固定タブ、新しいタブ、拡張機能のページ、URL が空のタブは、ブックマークへの自動保存から除きます。自動保存前のタブ一覧には含まれます。シークレットウィンドウのタブは取得しません。
 
-固定タブ、新しいタブ、拡張機能のページ、URL が空のタブはバックアップしません。シークレットウィンドウのタブは、タブの控えにも本文の保存にも含めません。
+ページ本文の保存は、初期状態ではすべてのサイトで OFF です。右クリックメニューで ON にしたサイトのホスト名と、表示本文の先頭 20,000 字までを保存し、検索に使います。同じ URL の本文は上書きします。対象はホスト名の完全一致で判定するため、例えば `github.com` を ON にしても `gist.github.com` は対象になりません。休止中のタブや読み取れないページの本文は保存しません。
+
+保存した URL、タイトル、本文には、閲覧したページによって個人情報や私的な内容が含まれることがあります。
 
 ### 保存場所と共有
 
-情報はこの PC の Chrome 内に保存します。ブックマークは「その他のブックマーク/TabBundle/」以下に置きます。タブの控え、保存後の確認待ち情報、ON のホスト名、本文、古いバックアップを移した時刻は `chrome.storage.local` に置きます。一時的なセッション ID は `chrome.storage.session` に置きます。`chrome.storage.sync` は使いません。保存データを拡張機能で暗号化していません。
+情報は利用者の Chrome 内に保存します。TabBundle 自体は外部へ送信せず、開発者が保存データを取得・閲覧する機能もありません。アカウント登録は不要です。
 
-TabBundle 自体はデータを外部へ送信せず、第三者に提供・販売しません。広告や解析にも使いません。アカウント登録、メールアドレスの入力、`chrome.identity` は使いません。取得した情報は、タブのバックアップと保存済みページの検索という目的にだけ使います。個人向け広告、広告プラットフォームやデータブローカーへの提供、信用判断や貸付には使いません。開発者やその関係者が保存データを閲覧する機能もありません。この取り扱いは Chrome ウェブストアの User Data Policy と Limited Use の制限に従います。
+ブックマークは「その他のブックマーク/TabBundle/」以下に保存します。Chrome のブックマーク同期が有効な場合、Chrome の機能によって Google に同期されることがあります。ページ本文は端末内に保存し、この同期の対象にはなりません。
 
-TabBundle が作るブックマークは、Chrome の通常のブックマークです。Chrome のブックマーク同期を有効にしている場合、Chrome 自身の機能として Google に同期されることがあります。これは TabBundle による送信ではありません。`chrome.storage.local` にある本文は Chrome のブックマーク同期の対象ではありません。
+TabBundle は保存データを独自に暗号化していません。端末や Chrome のプロファイルにアクセスできる人が、保存内容を読める可能性があります。
 
-### 保存期間と削除
+取得した情報は、タブのバックアップと保存済みページの検索にだけ使います。広告・アクセス解析、第三者への提供・販売、信用判断・貸付には利用しません。この情報の利用は、Chrome ウェブストアの [Limited Use](https://developer.chrome.com/docs/webstore/program-policies/limited-use) の制限に従います。
 
-自動バックアップは作成から 7 日を過ぎた後の次の片付けで「old/自動バックアップ/」へ移します。そこに移ってから 7 日を過ぎた後の次の片付けで削除します。「手動保存/」は自動で移動・削除しません。
+### 保存期間と削除方法
 
-サイトを OFF にすると、そのホストの保存済み本文をすべて消し、サイトへのアクセス許可を外します。Chrome の拡張機能設定でサイトへのアクセスを外した場合も、OFF にして本文を消します。TabBundle 内のブックマークから URL がなくなった本文は、片付けの際に消します。ただし、現在開いているタブと、まだバックアップを書いていないウィンドウの URL の本文は残します。
+- 自動バックアップは、作成から 7 日を過ぎた後の整理で「old/自動バックアップ/」へ移し、移動から 7 日を過ぎた後の整理で削除します。整理は 1 日 1 回と Chrome の起動時に行います。Chrome が動いていない間は削除されません。
+- 「手動保存/」内のブックマークは自動削除しません。残したいものは、このフォルダへ移してください。ブックマークは Chrome のブックマーク管理画面から削除できます。
+- 本文保存を OFF にすると、そのサイトの保存済み本文とアクセス許可を削除します。Chrome の設定からサイトへのアクセスを取り消した場合も同様です。ON にしたサイトの設定は、OFF にするまで保持します。
+- TabBundle 内にブックマークがなくなったページの本文は、次の整理で削除します。ただし、開いているタブや自動バックアップの処理待ちのページの本文は残します。本文に一律の日数による保存期限はありません。
+- 復旧用のタブ一覧は、タブの変更に合わせて更新します。閉じたウィンドウの情報は、保存処理を終えた後の更新時に削除します。保存直後の確認用データは、通常、保存から 60 秒以上経過した後の処理で削除します。Chrome の終了などで処理できなかった分は、次回起動時の復旧・確認まで残ります。
+- 起動を区別する一時的な識別子は、Chrome の再起動や拡張機能の更新・再読み込み・無効化で消えます。復旧用データ内の識別子は、そのデータとともに削除します。古いバックアップの移動日時は、対象がその保存先からなくなった後の整理で削除します。
 
-右クリックメニューからサイトを OFF にできます。TabBundle のブックマークは Chrome のブックマーク管理画面で削除できます。Chrome の仕様で、TabBundle をアンインストールすると `chrome.storage.local` のデータは削除されますが、作成済みのブックマークは残ります。不要なブックマークはご自身で削除できます。
+アンインストールすると、本文や復旧用データなど拡張機能内の保存情報は削除されます。作成済みのブックマークは残るため、不要なものは Chrome のブックマーク管理画面から削除してください。
 
-### 権限と理由
+### お問い合わせと変更
 
-| 権限 | 理由 |
-|---|---|
-| `tabs` | 開いているタブの URL とタイトルを読んで、自動バックアップに残すため |
-| `bookmarks` | TabBundle フォルダに書き込み、検索のために読むため |
-| `storage` | 控え、本文、ON のサイトの一覧を、この PC の中に置くため |
-| `alarms` | 1 日 1 回の片付けのため |
-| `contextMenus` | 本文の保存を ON / OFF する右クリックメニューのため |
-| `scripting` | ON にしたサイトのページから本文を読むため |
-| `unlimitedStorage` | 本文がたまっても保存の上限（10 MB）で止まらないようにするため |
-| サイトへのアクセス（`optional_host_permissions`） | インストール時には求めず、本文の保存を ON にしたサイトだけ、そのときに許可を求めるため |
+お問い合わせは [GearMind のフォーム](https://gearmind.cc/contact/) で受け付けます。送信する名前・メールアドレス・お問い合わせ内容には、[会社サイトのプライバシーポリシー](https://gearmind.cc/privacy/) が適用されます。
 
-### 問い合わせと変更
+不具合や機能の要望は [GitHub Issues](https://github.com/gearmind-inc/TabBundle/issues) でも受け付けます。投稿は公開されます。個人情報や機密情報を含む URL・本文・画像は投稿しないでください。
 
-問い合わせは GearMind Inc. のお問い合わせフォーム (https://gearmind.cc/contact/) で受け付けます。不具合の報告や機能の要望は、GitHub の TabBundle リポジトリの Issues でも受け付けます。このポリシーを変更した場合は、ここに変更後の内容と最終更新日を掲載します。
+このポリシーを変更した場合は、このページに変更後の内容と最終更新日を掲載します。
 
 ## English
 
 Last updated: 2026-09-30
 
-### Provider
+### Provider and scope
 
-TabBundle is provided by GearMind Inc. (株式会社GearMind). For more information, visit https://gearmind.cc/. In this policy, “the developer” means GearMind Inc.
+TabBundle is a Chrome extension provided by [GearMind Inc. (株式会社GearMind)](https://gearmind.cc/). This policy explains how TabBundle handles data.
 
-### Data collected and how it is used
+### Data collected and its purpose
 
-TabBundle reads the URL, title, pinned status, and order of tabs in normal windows. It keeps a local snapshot of open tabs to create automatic bookmark backups. It also uses the titles and URLs of saved bookmarks for search in the popup.
+TabBundle reads the URLs, titles, pinned status, and order of tabs in normal windows for automatic bookmark backups and search. It also records identifiers, such as window identifiers, and timestamps needed for saving and recovery.
 
-Saving page text is OFF for every site by default. When you turn it ON through the right-click menu, TabBundle stores the exact hostname and up to the first 20,000 characters of visible page text. Hostnames must match exactly. Text is stored by URL and used for search in the popup. It does not save text from discarded tabs or pages it cannot read. Depending on the page, the saved text may contain personal information.
+Pinned tabs, new tabs, extension pages, and tabs with empty URLs are excluded from automatic bookmark backups. They are included in the local tab snapshot before backup. Incognito tabs are not collected.
 
-Pinned tabs, new tabs, extension pages, and tabs with empty URLs are excluded from backups. Tabs in incognito windows are excluded from both the tab snapshot and page-text saving.
+Page-text saving is OFF for every site by default. When enabled through the right-click menu, TabBundle saves the site's hostname and up to the first 20,000 characters of visible page text for search. Text saved for the same URL is replaced. Hostnames must match exactly: enabling `github.com` does not enable `gist.github.com`. Text from discarded tabs or unreadable pages is not saved.
+
+Depending on the pages visited, saved URLs, titles, and text may contain personal information or private content.
 
 ### Storage and sharing
 
-Data is stored in Chrome on this computer. Bookmarks are placed under “Other bookmarks/TabBundle/”. The tab snapshot, pending verification data, enabled hostnames, page text, and timestamps for moved backups are stored in `chrome.storage.local`. A temporary session ID is stored in `chrome.storage.session`. TabBundle does not use `chrome.storage.sync`. TabBundle does not encrypt stored data itself.
+Data is stored in the user's Chrome browser. TabBundle itself does not send it externally and has no feature that lets the developer retrieve or read it. No account registration is required.
 
-TabBundle does not send data outside the extension, share it with third parties, or sell it. It does not use data for advertising or analytics. It does not require account registration or an email address, and it does not use `chrome.identity`. It uses the data only to back up tabs and search saved pages. It does not use data for personalized advertising, provide it to ad platforms or data brokers, or use it for credit decisions or lending. The developer and their staff have no feature for reading stored user data. This use complies with the Chrome Web Store User Data Policy, including its Limited Use requirements.
+Bookmarks are saved under “Other bookmarks/TabBundle/”. If Chrome bookmark sync is enabled, Chrome may sync them to Google. Page text is stored on the device and is not included in bookmark sync.
 
-Bookmarks created by TabBundle are ordinary Chrome bookmarks. If Chrome bookmark sync is enabled, Chrome itself may sync them to Google. TabBundle does not send them. Page text in `chrome.storage.local` is not part of Chrome bookmark sync.
+TabBundle does not encrypt stored data itself. Someone with access to the device or Chrome profile may be able to read it.
+
+Data is used only for tab backups and searching saved pages. It is not used for advertising, analytics, credit decisions, or lending, or shared or sold to third parties. This use of information adheres to the Chrome Web Store's [Limited Use](https://developer.chrome.com/docs/webstore/program-policies/limited-use) restrictions.
 
 ### Retention and deletion
 
-At the next cleanup after an automatic backup becomes more than seven days old, TabBundle moves it to “old/自動バックアップ/”. At the next cleanup after it has spent more than seven days there, TabBundle deletes it. TabBundle does not automatically move or delete items in “手動保存/”.
+- Automatic backups move to “old/自動バックアップ/” at the next cleanup after they become more than seven days old. They are deleted at the next cleanup after more than seven days in that folder. Cleanup runs daily and when Chrome starts. Data is not deleted while Chrome is not running.
+- Bookmarks in “手動保存/” are not automatically deleted. Move bookmarks there to keep them. You can delete bookmarks in Chrome's bookmark manager.
+- Turning page-text saving OFF deletes the site's saved text and removes its access permission. Revoking site access in Chrome's settings does the same. Enabled-site settings are kept until turned OFF.
+- Text for pages no longer bookmarked under TabBundle is deleted during the next cleanup, except for open tabs and pages awaiting automatic backup. Page text has no fixed retention period.
+- The recovery snapshot is updated as tabs change. Information about a closed window is removed during a snapshot update after its save operation completes. Data kept to check a recent save is normally removed during processing after at least 60 seconds have passed. If Chrome closes before processing completes, data remains until recovery and verification on the next startup.
+- The temporary identifier used to distinguish browser sessions is cleared when Chrome restarts or the extension is updated, reloaded, or disabled. Identifiers in recovery data are deleted with that data. Backup move timestamps are deleted during cleanup after the corresponding items leave the old-backup folder.
 
-Turning a site OFF deletes all saved page text for that hostname and removes its site access permission. Removing site access in Chrome's extension settings also turns it OFF and deletes that text. During cleanup, TabBundle deletes text for URLs no longer bookmarked under TabBundle. It keeps text for tabs that are still open and for windows whose backups have not yet been written.
-
-You can turn a site OFF using the right-click menu and delete TabBundle bookmarks in Chrome's bookmark manager. Under Chrome's behavior, uninstalling TabBundle deletes its `chrome.storage.local` data, while its bookmarks remain. You can delete those bookmarks yourself.
-
-### Permissions and reasons
-
-| Permission | Reason |
-|---|---|
-| `tabs` | Read open-tab URLs and titles for automatic backups |
-| `bookmarks` | Write to the TabBundle folder and read it for search |
-| `storage` | Keep the tab snapshot, page text, and enabled hostnames in Chrome on this computer |
-| `alarms` | Run daily cleanup |
-| `contextMenus` | Provide the right-click menu for turning page-text saving ON or OFF |
-| `scripting` | Read page text on sites where saving is ON |
-| `unlimitedStorage` | Keep page-text storage from stopping at the 10 MB limit |
-| Site access (`optional_host_permissions`) | Request access only when you turn on page-text saving for a site, not at installation |
+Uninstalling TabBundle deletes its internal data, including saved text and recovery data. Created bookmarks remain. Delete unwanted bookmarks in Chrome's bookmark manager.
 
 ### Contact and changes
 
-For questions, use the GearMind Inc. contact form (https://gearmind.cc/contact/). Bug reports and feature requests are also welcome in Issues in the TabBundle GitHub repository. If this policy changes, the revised text and last-updated date will be posted here.
+For questions, use the [GearMind contact form](https://gearmind.cc/contact/). Names, email addresses, and messages submitted through the form are covered by the [company website's privacy policy](https://gearmind.cc/privacy/).
+
+Bug reports and feature requests are also welcome in [GitHub Issues](https://github.com/gearmind-inc/TabBundle/issues). Posts are public. Do not post URLs, text, or images containing personal or confidential information.
+
+If this policy changes, the revised text and last-updated date will be posted on this page.
