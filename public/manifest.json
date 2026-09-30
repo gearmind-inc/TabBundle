@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TabBundle",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "開いていたタブをブックマークに自動保存。保存したページをタイトル・URL・ONにしたサイトの本文から検索できます。",
   "icons": {
     "16": "icons/icon16.png",
