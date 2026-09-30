@@ -40,7 +40,7 @@ Save open tabs as bookmarks and make saved pages searchable later. Optional page
 - `alarms`: Run daily cleanup.
 - `contextMenus`: Show the right-click menu that turns page-text saving ON or OFF for a site.
 - `scripting`: Run the bundled function that reads page text on sites where saving is ON.
-- `unlimitedStorage`: Prevent saved page text from reaching the normal 10 MB storage limit.
+- `unlimitedStorage`: Allow saved page text to exceed the normal 10 MB storage quota.
 - `https://*/*` (optional site access): When you enable text saving for an HTTPS site, request access to that hostname to read page text. It is not requested at installation.
 - `http://*/*` (optional site access): When you enable text saving for an HTTP site, request access to that hostname to read page text. It is not requested at installation.
 

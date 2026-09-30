@@ -30,10 +30,10 @@ TabBundle は保存データを独自に暗号化していません。端末や 
 
 ### 保存期間と削除方法
 
-- 自動バックアップは、作成から 7 日を過ぎた後の整理で「old/自動バックアップ/」へ移し、移動から 7 日を過ぎた後の整理で削除します。整理は 1 日 1 回と Chrome の起動時に行います。Chrome が動いていない間は削除されません。
+- 自動バックアップは、作成から 7 日を過ぎた後の整理で「old/自動バックアップ/」へ移し、移動から 7 日を過ぎた後の整理で削除します。整理は 1 日 1 回と Chrome の起動時に行います。Chrome が動いていない間は削除されません。自分で「old/自動バックアップ/」へ入れたフォルダも、整理で最初に見つかった時点から 7 日を過ぎた後の整理で削除します。
 - 「手動保存/」内のブックマークは自動削除しません。残したいものは、このフォルダへ移してください。ブックマークは Chrome のブックマーク管理画面から削除できます。
 - 本文保存を OFF にすると、そのサイトの保存済み本文とアクセス許可を削除します。Chrome の設定からサイトへのアクセスを取り消した場合も同様です。ON にしたサイトの設定は、OFF にするまで保持します。
-- TabBundle 内にブックマークがなくなったページの本文は、次の整理で削除します。ただし、開いているタブや自動バックアップの処理待ちのページの本文は残します。本文に一律の日数による保存期限はありません。
+- TabBundle 内にブックマークがなくなったページの本文は、削除・移動の数秒後、または 1 日 1 回の本文整理で削除します。ただし、開いているタブや自動バックアップの処理待ちのページの本文は残します。本文に一律の日数による保存期限はありません。
 - 復旧用のタブ一覧は、タブの変更に合わせて更新します。閉じたウィンドウの情報は、保存処理を終えた後の更新時に削除します。保存直後の確認用データは、通常、保存から 60 秒以上経過した後の処理で削除します。Chrome の終了などで処理できなかった分は、次回起動時の復旧・確認まで残ります。
 - 起動を区別する一時的な識別子は、Chrome の再起動や拡張機能の更新・再読み込み・無効化で消えます。復旧用データ内の識別子は、そのデータとともに削除します。古いバックアップの移動日時は、対象がその保存先からなくなった後の整理で削除します。
 
@@ -77,10 +77,10 @@ Data is used only for tab backups and searching saved pages. It is not used for 
 
 ### Retention and deletion
 
-- Automatic backups move to “old/自動バックアップ/” at the next cleanup after they become more than seven days old. They are deleted at the next cleanup after more than seven days in that folder. Cleanup runs daily and when Chrome starts. Data is not deleted while Chrome is not running.
+- Automatic backups move to “old/自動バックアップ/” at the next cleanup after they become more than seven days old. They are deleted at the next cleanup after more than seven days in that folder. Cleanup runs daily and when Chrome starts. Data is not deleted while Chrome is not running. Folders you place in “old/自動バックアップ/” yourself are also deleted at the next cleanup after more than seven days from when cleanup first finds them.
 - Bookmarks in “手動保存/” are not automatically deleted. Move bookmarks there to keep them. You can delete bookmarks in Chrome's bookmark manager.
 - Turning page-text saving OFF deletes the site's saved text and removes its access permission. Revoking site access in Chrome's settings does the same. Enabled-site settings are kept until turned OFF.
-- Text for pages no longer bookmarked under TabBundle is deleted during the next cleanup, except for open tabs and pages awaiting automatic backup. Page text has no fixed retention period.
+- Text for pages no longer bookmarked under TabBundle is deleted a few seconds after bookmarks are deleted or moved, or during daily text cleanup, except for open tabs and pages awaiting automatic backup. Page text has no fixed retention period.
 - The recovery snapshot is updated as tabs change. Information about a closed window is removed during a snapshot update after its save operation completes. Data kept to check a recent save is normally removed during processing after at least 60 seconds have passed. If Chrome closes before processing completes, data remains until recovery and verification on the next startup.
 - The temporary identifier used to distinguish browser sessions is cleared when Chrome restarts or the extension is updated, reloaded, or disabled. Identifiers in recovery data are deleted with that data. Backup move timestamps are deleted during cleanup after the corresponding items leave the old-backup folder.
 
